@@ -141,7 +141,7 @@ export const CreateUser = async (req, res) => {
          * Create User in database
          */
 
-        const userCreated = await USER.create({ name, email, password })
+        const userCreated = await USER.create({ name, email, encrypedPassword })
 
 
 
