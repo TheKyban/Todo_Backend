@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import USER from '../models/user.model.js'
 import { response } from '../utils/response.js';
+import bcrypt from "bcrypt"
 
 
 /**
@@ -41,6 +42,8 @@ export const loginUser = async (req, res) => {
          * Check password is correct or not
          */
 
+        const isMatch = bcrypt.compare(password,isUser.password)
+
         if (isUser.password === password) {
             /**
              * Encrypt id
@@ -53,10 +56,11 @@ export const loginUser = async (req, res) => {
              * Set cookie
              */
 
+
             res.cookie('token', token, {
                 httpOnly: true,
                 maxAge: 1000 * 60 * 60,
-                sameSite: process.env.NODE_ENV === "Development" ? "lax" : "node",
+                SameSite: process.env.NODE_ENV === "Development" ? "lax" : "node",
                 secure: process.env.NODE_ENV === "Development" ? false : true,
             })
 
@@ -65,7 +69,8 @@ export const loginUser = async (req, res) => {
              * Send response
              */
 
-            return response(res, 201, true, "password matched")
+            return response(res, 200, true, `Welcome back ${isUser.name}`)
+
         } else {
             return response(res, 404, false, "incorrect password")
         }
@@ -73,6 +78,7 @@ export const loginUser = async (req, res) => {
 
 
     } catch (error) {
+        console.log(error)
         return response(res, 404, false, "id or password maybe incorrect")
     }
 }
@@ -125,6 +131,11 @@ export const CreateUser = async (req, res) => {
 
         const { name, email, password } = req.body
 
+        /**
+         * Encrypt password
+         */
+
+        const encrypedPassword = bcrypt.hash(password,10)
 
         /**
          * Create User in database
