@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import USER from '../models/user.model.js'
 import { response } from '../utils/response.js';
 import bcrypt from "bcrypt"
+import { sendCookie } from '../utils/sendCookies.js';
 
 
 /**
@@ -42,7 +43,7 @@ export const loginUser = async (req, res) => {
          * Check password is correct or not
          */
 
-        const isMatch = bcrypt.compare(password,isUser.password)
+        const isMatch = bcrypt.compare(password, isUser.password)
 
         if (isMatch) {
             /**
@@ -57,12 +58,14 @@ export const loginUser = async (req, res) => {
              */
 
 
-            res.cookie('token', token, {
-                httpOnly: true,
-                maxAge: 1000 * 60 * 60,
-                SameSite: process.env.NODE_ENV === "Development" ? "lax" : "node",
-                secure: process.env.NODE_ENV === "Development" ? false : true,
-            })
+            // res.cookie('token', token, {
+            //     httpOnly: true,
+            //     maxAge: 1000 * 60 * 60,
+            //     SameSite: process.env.NODE_ENV === "Development" ? "lax" : "node",
+            //     secure: process.env.NODE_ENV === "Development" ? false : true,
+            // })
+
+            sendCookie(res, token, (1000 * 60 * 60))
 
 
             /**
@@ -96,18 +99,20 @@ export const logout = (req, res, next) => {
         /**
          * Delete cookie
          */
-        res.cookie("token", "", {
-            httpOnly: true,
-            expires: new Date(Date.now()),
-            sameSite: process.env.NODE_ENV === "Development" ? "lax" : "node",
-            secure: process.env.NODE_ENV === "Development" ? false : true,
-        })
+        // res.cookie("token", "", {
+        //     httpOnly: true,
+        //     expires: new Date(Date.now()),
+        //     sameSite: process.env.NODE_ENV === "Development" ? "lax" : "node",
+        //     secure: process.env.NODE_ENV === "Development" ? false : true,
+        // })
+
+        sendCookie(res, "", 0)
 
         /**
          * send response
          */
 
-        response(res, 200, true, "successfully logout")
+        return response(res, 200, true, "successfully logout")
 
     } catch (err) {
         console.log(err)
@@ -135,24 +140,39 @@ export const CreateUser = async (req, res) => {
          * Encrypt password
          */
 
-        const encrypedPassword = bcrypt.hash(password,10)
+        const encrypedPassword = await bcrypt.hash(password, 10)
 
         /**
          * Create User in database
          */
 
-        const userCreated = await USER.create({ name, email, encrypedPassword })
+        const userCreated = await USER.create({ name, email, password: encrypedPassword })
 
 
+        /**
+         * Jwt encryption
+         */
+
+        const token = jwt.sign({ "token": userCreated._id }, process.env.JWT_SECRET)
+
+
+        /**
+         * Send cookies
+         */
+
+        sendCookie(res, token, (1000 * 60 * 60))
 
         /**
          * send response
          */
 
-        response(res, 201, true, "user created successfully")
+        return response(res, 201, true, "user created successfully")
+
+
 
     } catch (error) {
-        response(res, 404, false, "user is already registered")
+        console.log(error)
+        return response(res, 404, false, "user is already registered")
     }
 
 }
