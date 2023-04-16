@@ -44,7 +44,7 @@ export const loginUser = async (req, res) => {
 
         const isMatch = bcrypt.compare(password,isUser.password)
 
-        if (isUser.password === password) {
+        if (isMatch) {
             /**
              * Encrypt id
              */
