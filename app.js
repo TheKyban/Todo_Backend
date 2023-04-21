@@ -28,7 +28,9 @@ app.use(cookieParser())
 
 
 
-
+app.get("/",(req,res)=>{
+    res.send("/task,/user,/user/login,/user/new,/user/logout")
+})
 /**
  * Stich user Router to the app
  */
