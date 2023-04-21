@@ -3,6 +3,6 @@ export const sendCookie = (res,token,time) => {
         httpOnly: true,
         expires: new Date(Date.now() + time),
         // SameSite: process.env.NODE_ENV === "Development" ? "lax" : "none",
-        secure: process.env.NODE_ENV === "Development" ? false : true,
+        // secure: process.env.NODE_ENV === "Development" ? false : true,
     })
 }
